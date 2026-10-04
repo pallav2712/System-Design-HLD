@@ -5,6 +5,7 @@
 > Tag guide: `Extra` = jo video mein nahi tha, revision ke liye add kiya hai
 > `⚠️ Correction` = video mein jo galat ya imprecise bola gaya, uska sahi version
 > `🔄 Update` = video purana hai, ab jo latest hai wo yahan likha hai
+> `💡 Simple Words` = jo cheez confusing ho sakti hai, usse aasan bhasha mein, video ke apne example se samjhaya hai
 
 ## Index (is file ke videos)
 
@@ -282,18 +283,64 @@ Schema = data **kaise structured** hoga. Relational DB mein **tables aur rows** 
 
 ### 2) ACID Properties
 
-| Letter | Property | Matlab | Example |
-|---|---|---|---|
-| **A** | **Atomicity** | Transaction ya **poori hoti hai ya bilkul nahi** | Account A se paise kate aur B mein nahi gaye, ye atomicity todta hai |
-| **C** | **Consistency** | DB ka state hamesha consistent rahe | Do reads ek balance par: ek ko 500, dusre ko 400 nahi milna chahiye |
-| **I** | **Isolation** | Do transactions ek dusre ke baare mein nahi jaante | Read aur write ek saath: write complete hone tak read purani value (500) dekhta hai, baad mein 600 |
-| **D** | **Durability** | Writes / updates properly log hote hain aur **disk par persist** hote hain | Crash ke baad bhi data bacha rehta hai |
+Pehle ek cheez: **Transaction** = ek aisa kaam jisme ek se zyada steps hote hain, lekin wo **ek poore unit** ki tarah hone chahiye. Jaise paise transfer karna.
+
+| Letter | Property | Matlab (ek line) |
+|---|---|---|
+| **A** | **Atomicity** | Transaction **ya poori hoti hai ya bilkul nahi** |
+| **C** | **Consistency** | DB ke **rules kabhi nahi tootne chahiye** |
+| **I** | **Isolation** | Ek saath chalte kaam ek dusre mein **beech mein dakhal na dein** |
+| **D** | **Durability** | Ek baar ho gaya to **permanent**, crash ke baad bhi safe |
+
+> `💡 Simple Words` **ACID ek hi example se: Rahul, Priya ko ₹100 bhejta hai**
+>
+> **Setup:** Rahul ke account mein ₹500, Priya ke account mein ₹300. Total = ₹800.
+> Ye ek **transaction** hai jisme 2 steps hain: (1) Rahul ke account se ₹100 kato, (2) Priya ke account mein ₹100 jodo.
+>
+> | Moment | Rahul | Priya | Total |
+> |---|---|---|---|
+> | Shuru | 500 | 300 | 800 |
+> | Step 1 ke baad (beech ka state) | 400 | 300 | 700 (paisa gayab dikh raha!) |
+> | Step 2 ke baad | 400 | 400 | 800 |
+>
+> **A, Atomicity = "ya poora, ya bilkul nahi"**
+> - Maan lo Step 1 hua aur Step 2 se **pehle server crash** ho gaya. Rahul ke ₹100 kat gaye, Priya ko mile nahi. Paisa gayab!
+> - Atomicity ka matlab: DB aisa hone hi nahi deta. Ya to **dono steps hote hain**, ya **dono cancel** (Rahul ka ₹100 wapas, jaise kuch hua hi nahi).
+> - Analogy: ATM se ya to cash niklega aur balance katega, ya kuch bhi nahi.
+>
+> **C, Consistency = "rules kabhi na tootein"**
+> - DB ke kuch rules hote hain: balance negative nahi ho sakta, aur transfer mein total paisa same rehta hai (₹800 hi).
+> - Agar Rahul ke paas sirf ₹50 hote aur wo ₹100 bhejta, to DB transaction **reject** kar deta, kyunki rule "balance 0 se kam nahi" tootta.
+> - Matlab: transaction se pehle DB "valid" tha, baad mein bhi "valid" hi rahega.
+> - Video ne ise "do logon ko alag value nahi milni chahiye" se samjhaya, jo asal mein isolation / replica-consistency ke zyada kareeb hai (neeche Correction dekho). **Interview ke liye: C = rules na tootein.**
+>
+> **I, Isolation = "ek ke kaam mein dusra beech mein na ghuse"**
+> - Video ka example: balance ₹500 hai. Ek request balance **padh** rahi hai aur usi waqt dusri request use ₹600 **likh** rahi hai.
+> - Agar read **write se pehle** hua to 500 dikhega, **baad mein** hua to 600. Read ko kabhi **aadha-adhura (beech ka) state** nahi dikhna chahiye.
+> - Matlab: kaam ek saath chal rahe hon tab bhi result aisa ho jaise **ek ke baad ek** hue hon.
+> - Analogy: bank counter par jab tak ek customer ka kaam poora nahi hota, dusra beech mein se register nahi uthata.
+>
+> **D, Durability = "ho gaya to permanent"**
+> - Jab DB bol de "transaction successful", uske baad bijli chali jaye ya server restart ho, data **disk par safe** hai.
+> - DB pehle sab kuch ek **log** mein likh leta hai, isliye crash ke baad bhi recover kar sakta hai.
+> - Analogy: bank ki receipt mil gayi = ab record permanent hai.
+>
+> **Yaad rakhne ka trick:**
+>
+> | Letter | Ek line |
+> |---|---|
+> | A | Ya poora, ya kuch nahi |
+> | C | Rules na tootein |
+> | I | Beech mein dakhal nahi |
+> | D | Permanent save |
+>
+> **Banking mein ACID kyun zaroori?** Kyunki paisa kabhi gayab, double ya galat nahi hona chahiye. Isi liye banking jaise systems mein relational DB (ACID) choose hota hai.
 
 **Kab relational choose karein (ACID ke liye)?** Jab **transactions** chahiye (banking app) aur **schema fixed** hai jo future mein zyada nahi badlega.
 
-> `⚠️ Correction` (imprecise) Video mein **Consistency** ko "do reads ko alag value nahi milni chahiye" se explain kiya gaya. ACID ka **C** actually ye hai ki har transaction DB ko **ek valid state se dusre valid state** mein le jaye (saare constraints / rules follow ho). "Sabko same value milna" replicas ke beech wali consistency (CAP / linearizability) aur **isolation** se zyada juda hai. Interview mein C ko "constraints aur rules hamesha valid rahein" bolo.
+> `⚠️ Correction` (imprecise) Video mein **Consistency** ko "do reads ko alag value nahi milni chahiye" se explain kiya gaya. ACID ka **C** actually ye hai ki har transaction DB ko **ek valid state se dusre valid state** mein le jaye (saare constraints / rules follow ho). "Sabko same value milna" replicas ke beech wali consistency (CAP / linearizability) aur **isolation** se zyada juda hai.
 
-> `⚠️ Correction` (imprecise) Isolation ka matlab "transactions ek dusre ko jaante hi nahi" simplified hai. Actual mein **isolation levels** hote hain (Read Committed, Repeatable Read, Serializable), aur jitna strong level, utna kam anomalies lekin utni kam concurrency.
+> `⚠️ Correction` (imprecise) Isolation ka matlab "transactions ek dusre ko jaante hi nahi" simplified hai. Actual mein **isolation levels** hote hain (Read Committed, Repeatable Read, Serializable), aur jitna strong level, utna kam anomalies lekin utni kam concurrency. (Ye thoda advanced hai, pehli padhai mein skip kar sakte ho.)
 
 ### Relational DBs ki limitations
 
